@@ -1,0 +1,319 @@
+<!--JavaScript includes all the frontend javascript needed for the application. It loads the data after page load-->
+
+<script>
+
+/**
+ * function to load the Growtown logo
+ */
+google.script.run.withSuccessHandler(function (logoData) {
+    document.getElementById('logo').src = logoData;
+}).include('logo');
+
+let options = {}; // global options object which stores building and rooms data
+
+/**
+ * The onload function loads buildings & rooms when page is loaded and adds buildings to dropdown menu.
+ * It also handles form submission.
+ */
+window.onload = function () {
+
+    // load ALL cleaning data
+    google.script.run.withSuccessHandler(function (serverOptions) {
+        options = serverOptions;
+        console.log(options);
+        const buildingNames = Object.keys(options).sort();
+        const buildingSelect = document.getElementById("building");
+
+        buildingNames.forEach(function (item) {
+            const option = document.createElement("option");
+            option.value = item;
+            option.text = item;
+            buildingSelect.add(option);
+        });
+    }).getBuildingOptions(); // call to the backend
+
+    const form = document.getElementById('CleaningForm');
+    const submitButton = document.getElementById('submitEntry');
+
+    // add custom submit event listener to properly submit data to the backend submit function and update data after submission 
+    form.addEventListener('submit', e => {
+        e.preventDefault();
+
+        // return if building or room is not selected
+        if (!validateForm()) {
+            return;
+        }
+
+        document.getElementById('response').innerText = "";
+
+        // Disable submit button to prevent multiple submissions
+        submitButton.disabled = true;
+        submitButton.textContent = 'Submitting...';
+        form.classList.add('loading');
+
+        // get data from form
+        const data = Object.fromEntries(new FormData(form).entries()); // get data from form
+        data.tasks = getSelectedTasks(); // add tasks to data object
+        const itemSelect = document.getElementById("room");
+        const roomId = itemSelect.options[itemSelect.selectedIndex].dataset.roomId; // get room id from element dataset
+        data.roomId = roomId; // add room id to data object
+
+        google.script.run
+
+            .withSuccessHandler(msg => {
+                document.getElementById('response').innerText = "Updating data...";
+                document.getElementById('response').style.color = "green";
+                form.reset();
+
+                // clear building options
+                const buildingSelect = document.getElementById("building");
+                buildingSelect.innerHTML = '<option value="">--Select Building--</option>';
+
+                // clear room options
+                const itemSelect = document.getElementById("room");
+                itemSelect.innerHTML = '<option value="">--Select Room--</option>';
+
+                // clear checklist
+                const checklistDiv = document.getElementById("checklist-container");
+                checklistDiv.innerHTML = '<div class="empty-state">Select a building and room to see available tasks</div>';
+
+                // run getBuildingOptions to get updated data
+                google.script.run.withSuccessHandler(function (serverOptions) {
+
+                    options = serverOptions;
+                    console.log('Updated options:', options);
+
+                    //reload building options
+                    const buildingNames = Object.keys(options).sort();
+                    buildingNames.forEach(function (item) {
+                        const option = document.createElement("option");
+                        option.value = item;
+                        option.text = item;
+                        buildingSelect.add(option);
+
+                    });
+
+
+                    // Re-enable submit button
+                    submitButton.disabled = false;
+                    submitButton.textContent = 'Submit Report'; // Reset button text
+                    form.classList.remove('loading');
+
+                    // update success message
+                    document.getElementById('response').innerText = msg + " Data updated. Submit another entry if needed.";
+
+                }).getBuildingOptions(); // get updated options object from server
+
+            })
+
+            .withFailureHandler(err => {
+                document.getElementById('response').innerText = "Error: " + err.message;
+                document.getElementById('response').style.color = "red";
+                console.error(err);
+
+                // Re-enable submit button even on error
+                submitButton.disabled = false;
+                submitButton.textContent = 'Submit Report'; // Reset button text
+                form.classList.remove('loading');
+
+            })
+
+            .submitCleaningReport(data);
+
+    });
+
+};
+
+/**
+ * updateOptions function updates room options on the drop down menu based on the selected building.
+ */
+function updateOptions() {
+    const categorySelect = document.getElementById("building");
+    const itemSelect = document.getElementById("room");
+    const selectedCategory = categorySelect.value;
+    const checklistDiv = document.getElementById("checklist-container");
+
+    // Clear existing options
+    itemSelect.innerHTML = '<option value="">--Select Room--</option>';
+
+    //Clear checklist
+    checklistDiv.innerHTML = '<div class="empty-state">Select a building and room to see available tasks</div>';
+
+    // Populate new room names if building is valid
+    if (options[selectedCategory]) {
+
+        const rooms = Object.keys(options[selectedCategory]).sort(); // Alphabetically sorted room names
+
+        for (const room of rooms) {
+            console.log(room);
+            const option = document.createElement("option");
+            option.value = room;
+            option.text = room;
+            option.dataset.roomId = options[selectedCategory][room].roomId;
+            option.dataset.roomType = options[selectedCategory][room].roomTypeId;
+            itemSelect.add(option);
+        }
+
+    }
+}
+
+/**
+ * updateChecklist function updates the task checklist based on the room selected.
+ * It retrives task data from the global 'options' object
+ */
+function updateChecklist() {
+    const building = document.getElementById("building").value;
+    const room = document.getElementById("room").value;
+
+    const itemSelect = document.getElementById("room");
+    const roomTypeId = itemSelect.options[itemSelect.selectedIndex].dataset.roomType; // get room type id from the room element dataset
+    const roomId = itemSelect.options[itemSelect.selectedIndex].dataset.roomId; // get room id from the room element dataset
+    const checklistDiv = document.getElementById("checklist-container");
+
+    //checklistDiv.innerHTML = '<p>Loading tasks...</p>';
+
+    const tasks = options[building][room].roomTasks;
+
+    checklistDiv.innerHTML = ""; // clear previous
+
+    // check if list is empty and return if so
+    console.log(tasks.length);
+    if (tasks.length === 0) {
+        console.log("empty task list");
+        checklistDiv.innerHTML = '<p>No tasks found for this room.</p>';
+        return;
+    }
+
+
+    let html = `
+          <div class="table-container">              
+            <table>
+              <thead>
+                <tr>
+                  <th style="text-align:left;">Completed</th>
+                  <th style="text-align:left;">Title</th>
+                  <th style="text-align:left;">Description</th>
+                  <th style="text-align:left;">Frequency (days)</th>
+                  <th style="text-align:left;">Last Completion Date</th>
+                  <th style="text-align:left;">Days Since Last Completion</th>
+                  <th style="text-align:left;">Overdue?</th>
+                </tr>
+              </thead>
+              <tbody>
+            `;
+
+
+
+
+    tasks.forEach((task, index) => {
+
+        // get days since last completion
+        let daysSince = "N/A";
+
+        if (task.lastCompletionDate == "Never") {
+            daysSince = "N/A"
+        } else {
+            const lastDate = new Date(task.lastCompletionDate);
+            const today = new Date();
+            lastDate.setHours(0, 0, 0, 0);
+            today.setHours(0, 0, 0, 0);
+
+            const msPerDay = 1000 * 60 * 60 * 24;
+            daysSince = Math.floor((today - lastDate) / msPerDay);
+        }
+
+        // create overdue variable
+        let isOverDue = "NO"
+        let rowClass = "";
+        if (daysSince > task.frequencyDays) {
+            isOverDue = "YES";
+            rowClass = "overdue-row";
+        }
+
+
+        // Truncate description and create expandable version
+        const fullDescription = task.taskDescription;
+        const shortDescription = fullDescription.length > 50 ? 
+        fullDescription.substring(0, 50) + '...' : 
+        fullDescription;
+    
+        const needsExpansion = fullDescription.length > 50;
+
+        html += `
+              <tr class="${rowClass}" style="border-top: 1px solid #ccc;">
+                <td>
+                  <input type="checkbox" name="completedTasks[]" id="task-${index}" value="${task.taskId}">
+                </td>
+                <td><label for="task-${index}">${task.taskTitle}</label></td>
+                <td>${task.taskDescription}</td>
+                <td>${task.frequencyDays}</td>
+                <td>${task.lastCompletionDate}</td>
+                <td>${daysSince} day(s) ago</td>
+                <td>${isOverDue}</td>
+                
+              </tr>
+              `;
+    });
+
+    html += `
+              </tbody>
+            </table>
+          </div>  
+           `;
+
+    checklistDiv.innerHTML = html;
+
+
+
+}
+
+
+
+/**
+ * validateForm returns false if either a building or a room isn't selected or if no tasks are selected,
+ * and it returns true if the selections are adequate. Used in the submit event listener for the form.
+ */
+function validateForm() {
+    const building = document.getElementById("building").value;
+    const room = document.getElementById("room").value;
+
+    if (!building || !room) {
+        document.getElementById('response').innerText = "Please select both a building and a room.";
+        document.getElementById('response').style.color = "red";
+        return false;
+    }
+
+    if (getSelectedTasks().length == 0) {
+        document.getElementById('response').innerText = "Please select tasks that were completed.";
+        document.getElementById('response').style.color = "red";
+        return false;
+    }
+
+    return true;
+}
+
+/**
+ * getSelectedTasks returns a list of task objects with task name and id based on the tasks
+ * selected in the checklist 
+ */
+function getSelectedTasks() {
+    const selectedCheckboxes = document.querySelectorAll('input[name="completedTasks[]"]:checked');
+    const tasks = [];
+
+    selectedCheckboxes.forEach(checkbox => {
+        const taskId = checkbox.value;
+        const label = document.querySelector(`label[for="${checkbox.id}"]`);
+        const taskName = label ? label.textContent : '';
+
+        tasks.push(
+            {
+                taskId: taskId,
+                taskName: taskName
+            }
+        );
+    });
+    return tasks;
+
+}
+
+</script>
