@@ -1,0 +1,27 @@
+The following formulas are for the LastCompletionDates tab of the Cleaning Log Google Sheet
+
+
+*****Formula for cell A1 (gets room & task id and last completed date):
+
+=QUERY(TaskCompletions!A1:E, 
+  "SELECT Col4, Col3, MAX(Col5) GROUP BY Col4, Col3")
+
+*****Formula for cell D2 (gets task name):
+
+=ARRAYFORMULA(IF(A2:A="", "",VLOOKUP(B2:B, Tasks!A:B,2,FALSE)))
+
+*****Formula for cell E2 (gets task frequency):
+
+=ARRAYFORMULA(IF(A2:A="", "",VLOOKUP(B2:B, Tasks!A:D,4,FALSE)))
+
+*****Formula for cell F2 (gets room name):
+
+=ARRAYFORMULA(IF(A2:A="", "",VLOOKUP(A2:A, Rooms!A:B,2,FALSE)))
+
+*****Formula for cell G2 (gets building name):
+
+=ARRAYFORMULA(IF(A2:A="", "",VLOOKUP(VLOOKUP(A2:A, Rooms!A:C,3,FALSE), Buildings!A:C,2,FALSE)))
+
+*****Formula for cell H2 (checks if task is overdue):
+
+=ARRAYFORMULA(IF(A2:A="", "",IF((TODAY() - C2:C)>E2:E,"OVERDUE","On Time")))
