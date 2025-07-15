@@ -1,0 +1,247 @@
+<!--Stylesheet.html includes all the css styling needed for the application-->
+
+<style>
+
+* {
+    box-sizing: border-box;
+}
+
+img{
+  height: 65px;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    margin: 0;
+    padding: 16px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    color: #333;
+}
+
+.container {
+    max-width: 75%;
+    margin: 0 auto;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.header {
+    background: linear-gradient(135deg, #1976D2 0%, #1565C0 100%);
+    color: white;
+    padding: 24px;
+    text-align: center;
+}
+
+.header-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    /* Space between logo and text */
+}
+
+.header h1 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 600;
+}
+
+.form-content {
+    padding: 24px;
+}
+
+.form-section {
+    margin-bottom: 32px;
+}
+
+.form-section h3 {
+    color: #1976D2;
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0 0 16px 0;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #E3F2FD;
+}
+
+.table-container {
+    overflow-x: auto;
+    margin-top: 16px;
+    border: 1px solid #E0E0E0;
+    border-radius: 8px;
+    background: white;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 600px;
+}
+
+
+th {
+    background: #F5F5F5;
+    padding: 12px 8px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 13px;
+    color: #666;
+    border-bottom: 2px solid #E0E0E0;
+    position: sticky;
+    top: 0;
+}
+
+td {
+    padding: 12px 8px;
+    border-bottom: 1px solid #F0F0F0;
+    border-right: solid 1px #F0F0F0; 
+    border-left: solid 1px #F0F0F0;
+    font-size: 14px;
+}
+
+tr:hover {
+    background: #F9F9F9;
+}
+
+
+
+/* Enhanced checkbox styling */
+input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    margin: 0;
+    cursor: pointer;
+    transform: scale(1.2);
+}
+
+label {
+    font-weight: 500;
+    color: #555;
+    font-size: 14px;
+}
+
+.datetime-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+input,
+select {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #E0E0E0;
+    border-radius: 8px;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    background: white;
+    margin-bottom: 16px;
+}
+
+input:focus,
+select:focus {
+    outline: none;
+    border-color: #1976D2;
+    box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.1);
+}
+
+button {
+    width: 50%;
+    padding: 16px;
+    background: linear-gradient(135deg, #1976D2 0%, #1565C0 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(25, 118, 210, 0.3);
+}
+
+button:active {
+    background: #0D47A1;
+    /* Darker blue when clicked */
+}
+
+.empty-state {
+    text-align: center;
+    padding: 24px;
+    color: #666;
+    font-style: italic;
+}
+
+.overdue-row {
+    background: #FFF3E0 !important;
+    border-left: 4px solid #FF9800;
+}
+
+.loading {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+#response {
+    margin-top: 16px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-weight: 500;
+    text-align: center;
+}
+
+/* For phone screens */
+
+@media screen and (max-width: 768px) {
+
+  body {
+    padding: 8px;
+  }
+  
+  .container {
+    max-width: 98%;
+    border-radius: 8px;
+  }
+
+  button {
+    width: 100%;
+  }
+
+  img {
+    height: 75px;
+  }
+
+  .header {
+    padding: 16px;
+  }
+  
+  .header h1 {
+    font-size: 20px;
+  }
+
+    /* Mobile-friendly table */
+  .table-container {
+    font-size: 13px;
+  }
+  
+  th, td {
+    padding: 8px 4px;
+    font-size: 14px;
+  }
+  
+  th {
+    font-size: 16px;
+  }
+  
+  /* Larger checkboxes for touch */
+  input[type="checkbox"] {
+    width: 24px;
+    height: 24px;
+    transform: scale(1.3);
+  }
+
+}
+
+
+</style>
