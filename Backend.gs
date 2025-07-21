@@ -16,7 +16,7 @@
  * Helper funtcion to get the spreadsheet when needed.
  */
 function getSpreadsheet() {
-  return SpreadsheetApp.openById('1Knzx4bufJoroZ-NU1XUqytzZdDuJjxnI4VRJ9Jwn-0M');
+  return SpreadsheetApp.openById('insert id');
 }
 
 /**
